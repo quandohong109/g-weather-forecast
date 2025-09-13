@@ -10,6 +10,12 @@ The application is deployed and accessible live on Firebase Hosting:
 
 **[https://g-weather-forecast-v1.web.app](https://g-weather-forecast-v1.web.app)**
 
+## Video Demo
+
+A video demonstration of the application can be found here:
+
+**[YouTube Video Demo](https://youtu.be/lRusdKptEz0)**
+
 ## Features
 
 - **City Search**: Search for any city worldwide to get weather data.
