@@ -72,15 +72,7 @@ The Cloud Functions require a secret API key from WeatherAPI.com.
     ```
     When prompted, enter your API key from WeatherAPI.com.
 
-### 4. Run the Application
-
-You can run the Flutter web app in development mode:
-
-```bash
-flutter run -d chrome
-```
-
-### 5. Deploy Cloud Functions
+### 4. Deploy Cloud Functions
 
 To make the subscription service work, you need to deploy the Cloud Functions:
 
@@ -88,3 +80,10 @@ To make the subscription service work, you need to deploy the Cloud Functions:
 firebase deploy --only functions
 ```
 
+### 5. Run the Application
+
+You can run the Flutter web app in development mode:
+
+```bash
+flutter run -d chrome
+```
