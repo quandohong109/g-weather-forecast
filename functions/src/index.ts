@@ -2,7 +2,7 @@ import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import axios from "axios";
 
-import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {onCall, HttpsError, onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import {defineSecret} from "firebase-functions/params";
 

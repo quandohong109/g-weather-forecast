@@ -1,16 +1,4 @@
 {
-  "flutter": {
-    "platforms": {
-      "dart": {
-        "lib/firebase_options.dart": {
-          "projectId": "g-weather-forecast-v1",
-          "configurations": {
-            "web": "1:349992392894:web:ab4ed23dee6ce69ab5e6ef"
-          }
-        }
-      }
-    }
-  },
   "functions": [
     {
       "codebase": "default",
@@ -32,12 +20,11 @@
         "firebase-debug.log",
         "firebase-debug.*.log",
         "*.local"
-      ],
-      "predeploy": ["npm --prefix functions run lint -- --fix"]
+      ]
     }
   ],
   "hosting": {
-    "public": "public",
+    "public": "build/web",
     "ignore": [
       "firebase.json",
       "**/.*",
