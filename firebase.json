@@ -9,7 +9,9 @@
         "firebase-debug.*.log",
         "*.local"
       ],
-      "source": "functions"
+      "source": "functions",
+      "runtime": "nodejs22",
+      "secrets": ["weather_key"]
     },
     {
       "source": "g-weather-forecast-codebasse",
@@ -20,7 +22,8 @@
         "firebase-debug.log",
         "firebase-debug.*.log",
         "*.local"
-      ]
+      ],
+      "runtime": "nodejs22"
     }
   ],
   "hosting": {

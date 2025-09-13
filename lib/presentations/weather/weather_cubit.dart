@@ -2,8 +2,7 @@
 import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:g_weather_forecast/objects/weather_data.dart';
 import 'package:g_weather_forecast/presentations/weather/weather_state.dart';
 import 'package:geolocator/geolocator.dart';
@@ -16,7 +15,7 @@ class WeatherCubit extends Cubit<WeatherState> {
     _loadInitialWeather();
   }
 
-  final Dio _dio = Dio();
+  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
 
   Future<void> _loadInitialWeather() async {
     final prefs = await SharedPreferences.getInstance();
@@ -95,21 +94,12 @@ class WeatherCubit extends Cubit<WeatherState> {
       emit(state.copyWith(isLoading: true, error: null, clearError: true));
     }
 
-    final String apiKey = dotenv.env['WEATHER_API_KEY'] ?? '';
-    if (apiKey.isEmpty) {
-      emit(state.copyWith(isLoading: false, error: 'API Key not found.'));
-      return;
-    }
-
     try {
-      final response = await _dio.get(
-        "https://api.weatherapi.com/v1/forecast.json",
-        queryParameters: {
-          'key': apiKey,
-          'q': 'id:${state.cityID}',
-          'days': 14,
-        },
-      );
+      final callable = _functions.httpsCallable('getWeatherData');
+      final response = await callable.call<Map<String, dynamic>>({
+        'cityId': state.cityID,
+        'days': 14,
+      });
 
       if (response.data != null) {
         final location = response.data['location'];
@@ -151,30 +141,18 @@ class WeatherCubit extends Cubit<WeatherState> {
       } else {
         throw Exception('No data received from API');
       }
-    } on DioException catch (e) {
-      emit(state.copyWith(
-          isLoading: false, error: 'Failed to fetch data: ${e.message}'));
     } catch (e) {
       emit(state.copyWith(
-          isLoading: false, error: 'An unexpected error occurred: $e'));
+          isLoading: false, error: 'Failed to fetch data: $e'));
     }
   }
 
   Future<List<Location>> searchCities(String query) async {
-    final String apiKey = dotenv.env['WEATHER_API_KEY'] ?? '';
-
-    if (apiKey.isEmpty) {
-      throw Exception('API Key not found. Please check your .env file.');
-    }
-
     try {
-      final response = await _dio.get(
-        "https://api.weatherapi.com/v1/search.json",
-        queryParameters: {
-          'key': apiKey,
-          'q': query,
-        },
-      );
+      final callable = _functions.httpsCallable('searchCities');
+      final response = await callable.call<List<dynamic>>({
+        'query': query,
+      });
 
       if (response.data != null) {
         List<dynamic> jsonList = response.data;
@@ -182,8 +160,8 @@ class WeatherCubit extends Cubit<WeatherState> {
       } else {
         throw Exception('No data received from API');
       }
-    } on DioException catch (e) {
-      throw Exception('Failed to fetch data: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to fetch data: $e');
     }
   }
 }

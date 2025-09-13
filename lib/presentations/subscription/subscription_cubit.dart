@@ -1,8 +1,6 @@
 // lib/presentations/subscription/subscription_cubit.dart
 import 'package:bloc/bloc.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:g_weather_forecast/objects/location.dart';
 import 'package:g_weather_forecast/presentations/subscription/subscription_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,7 +11,6 @@ class SubscriptionCubit extends Cubit<SubscriptionState> {
   }
 
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
-  final Dio _dio = Dio();
 
   void changeEmail(String email) {
     emit(state.copyWith(email: email));
@@ -130,14 +127,13 @@ class SubscriptionCubit extends Cubit<SubscriptionState> {
     final lastCityId = prefs.getString('last_city_id');
     if (lastCityId == null) return;
 
-    final String apiKey = dotenv.env['WEATHER_API_KEY'] ?? '';
-    if (apiKey.isEmpty) return;
-
     try {
-      final response = await _dio.get(
-        "https://api.weatherapi.com/v1/forecast.json",
-        queryParameters: {'key': apiKey, 'q': 'id:$lastCityId', 'days': 1},
-      );
+      final callable = _functions.httpsCallable('getWeatherData');
+      final response = await callable.call<Map<String, dynamic>>({
+        'cityId': lastCityId,
+        'days': 1,
+      });
+
       if (response.data != null) {
         final locationData = response.data['location'];
         final location = Location(
@@ -154,26 +150,18 @@ class SubscriptionCubit extends Cubit<SubscriptionState> {
   }
 
   Future<List<Location>> searchCities(String query) async {
-    if (query.isEmpty) {
-      return [
-        Location(id: 2717933, name: "Ha Noi", region: "", country: "Vietnam"),
-        Location(id: 2718413, name: "Ho Chi Minh City", region: "", country: "Vietnam"),
-      ];
-    }
-    final String apiKey = dotenv.env['WEATHER_API_KEY'] ?? '';
-    if (apiKey.isEmpty) {
-      throw Exception('API Key not found.');
-    }
     try {
-      final response = await _dio.get(
-        "https://api.weatherapi.com/v1/search.json",
-        queryParameters: {'key': apiKey, 'q': query},
-      );
+      final callable = _functions.httpsCallable('searchCities');
+      final response = await callable.call<List<dynamic>>({
+        'query': query,
+      });
+
       if (response.data != null) {
-        return (response.data as List).map((json) => Location.fromMap(json)).toList();
+        return response.data.map((json) => Location.fromMap(json)).toList();
       }
       return [];
     } catch (e) {
+      print('Error searching cities: $e');
       return [];
     }
   }

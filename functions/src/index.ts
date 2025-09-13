@@ -248,6 +248,74 @@ export const confirmUnsubscription = onRequest(
   }
 );
 
+// ========== onCall: searchCities ==========
+export const searchCities = onCall(
+  {region: "us-central1", secrets: [WEATHER_API_KEY]},
+  async (request) => {
+    const payload = (request.data && request.data.query === undefined && request.data.data) ?
+      request.data.data :
+      request.data;
+
+    const {query} = payload || {};
+
+    if (!query || typeof query !== "string") {
+      // Return default cities for empty query
+      return [
+        {id: 2717933, name: "Ha Noi", region: "", country: "Vietnam"},
+        {id: 2718413, name: "Ho Chi Minh City", region: "", country: "Vietnam"},
+      ];
+    }
+
+    const apiKey = WEATHER_API_KEY.value();
+    if (!apiKey) {
+      throw new HttpsError("internal", "API key not configured");
+    }
+
+    try {
+      const response = await axios.get("https://api.weatherapi.com/v1/search.json", {
+        params: {key: apiKey, q: query},
+      });
+
+      return response.data || [];
+    } catch (e) {
+      console.error("searchCities error:", e);
+      return [];
+    }
+  }
+);
+
+// ========== onCall: getWeatherData ==========
+export const getWeatherData = onCall(
+  {region: "us-central1", secrets: [WEATHER_API_KEY]},
+  async (request) => {
+    const payload = (request.data && request.data.cityId === undefined && request.data.data) ?
+      request.data.data :
+      request.data;
+
+    const {cityId, days = 4} = payload || {};
+
+    if (!cityId) {
+      throw new HttpsError("invalid-argument", "City ID is required");
+    }
+
+    const apiKey = WEATHER_API_KEY.value();
+    if (!apiKey) {
+      throw new HttpsError("internal", "API key not configured");
+    }
+
+    try {
+      const response = await axios.get("https://api.weatherapi.com/v1/forecast.json", {
+        params: {key: apiKey, q: `id:${cityId}`, days: Math.min(days, 10)},
+      });
+
+      return response.data;
+    } catch (e) {
+      console.error("getWeatherData error:", e);
+      throw new HttpsError("internal", "Failed to fetch weather data");
+    }
+  }
+);
+
 // ========== onSchedule: sendDailyWeatherUpdates ==========
 export const sendDailyWeatherUpdates = onSchedule(
   {
